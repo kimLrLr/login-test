@@ -5,13 +5,32 @@ import { useNavigate } from "react-router-dom";
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState(""); // 에러 메시지 상태
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // 로그인 로직 구현
-    console.log("ID:", email, "PW:", password);
-    // 예를 들어 로그인 성공 시 메인 페이지로 이동
+    try {
+      const response = await fetch("http://localhost:8800/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        console.log("로그인 성공");
+        navigate("/"); // 로그인 성공 시 메인 페이지로 이동
+      } else {
+        const result = await response.json();
+        setErrorMessage(result); // 에러 메시지 설정
+        console.error("로그인 실패:", result);
+      }
+    } catch (error) {
+      console.error("서버 오류:", error);
+      setErrorMessage("서버 오류가 발생했습니다.");
+    }
   };
 
   const goToSignup = () => {
@@ -23,6 +42,8 @@ export const Login = () => {
       <Row className="justify-content-md-center">
         <Col md={6}>
           <h2 className="text-center">로그인</h2>
+          {errorMessage && <p className="text-danger">{errorMessage}</p>}{" "}
+          {/* 에러 메시지 출력 */}
           <Form onSubmit={handleSubmit}>
             <Form.Group controlId="formBasicEmail" className="mb-3">
               <Form.Label>이메일(ID)</Form.Label>

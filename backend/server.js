@@ -125,6 +125,32 @@ app.post("/register", async (req, res) => {
   }
 });
 
+// 로그인 API
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json("이메일과 비밀번호를 입력하세요.");
+  }
+
+  // 이메일을 기준으로 유저 정보 조회
+  const q = "SELECT * FROM usertb WHERE email = ?";
+  db.query(q, [email], async (err, data) => {
+    if (err) return res.status(500).json(err);
+    if (data.length === 0)
+      return res.status(404).json("등록되지 않은 이메일입니다.");
+
+    const user = data[0];
+
+    // 비밀번호 비교
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json("비밀번호가 일치하지 않습니다.");
+
+    // 로그인 성공 처리
+    res.status(200).json("로그인 성공");
+  });
+});
+
 app.listen(8800, () => {
   console.log("8800으로 연결했음!!");
 });
